@@ -1,33 +1,33 @@
 #!/bin/bash
 
-clear
+#Check if ran as root
+if [[ "$EUID" -eq 0 ]];
+then
+  echo "script is not meant to be ran as root, not proceeding!"
+  exit
+fi
 
-#let's install software-properties-common just to be sure
-sudo apt install software-properties-common
+#check if docker and git are installed
+if [[ $(which docker) == "" ]];
+then
+  echo "Docker not found, please install it!"
+  exit
+elif [[ $(which git) == "" ]]
+then
+  echo "git not found, please install it!"
+  exit
+fi
 
-#just to be sure fresh installed systems can use git
-sudo apt install git
+# starts the docker daemon
+sudo systemctl start docker
 
-#let's install docker and docker.io
-sudo apt install docker docker.io
-
-#update
-sudo apt update && sudo apt upgrade
-
-#idk just it
-sudo apt --fix-broken install
-
-#git clone the eos git
+#clone the eos github
 git clone https://github.com/elementary/os.git
 
-#go to it's directory
-cd os
-
-#now let's compile this iso
+#compiles the code using docker
 sudo docker run --privileged -i -v /proc:/proc \
     -v ${PWD}:/working_dir \
     -w /working_dir \
     debian:latest \
-    /bin/bash -s etc/terraform-daily-6.0-azure.conf < build.sh
+    /bin/bash -s os/etc/terraform-daily-6.0-azure.conf < os/build.sh
 
-echo done, terminal is now yours
